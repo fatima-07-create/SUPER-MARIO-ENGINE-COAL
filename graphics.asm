@@ -639,187 +639,85 @@ DrawStageFrame:
 ; DrawBrickTile: [BP+6]=x, [BP+4]=y
 ; ============================================================================
 ; ============================================================================
-; DrawBackgroundScenery: Renders scrolling white clouds and green bushes
+; DrawBrickTile: [BP+6]=x, [BP+4]=y
 ; ============================================================================
-DrawBackgroundScenery:
-    push    ax
-    push    bx
-    push    cx
-    push    dx
-
-    xor     bx, bx                      ; World X anchor (0, 256, 512, 768)
-.scenery_loop:
-    cmp     bx, (MAP_COLS * TILE_SZ)
-    jae     .done
-
-    ; --- 1. White Cloud (at bx + 32, y = 32..52) ---
-    mov     ax, bx
-    add     ax, 32
-    sub     ax, [cam_x]                 ; screen_x = world_x - cam_x
-    cmp     ax, -48
-    jl      .draw_bush
-    cmp     ax, SCREEN_W
-    jge     .draw_bush
-
-    ; Left lobe
-    push    ax
-    push    word 40
-    push    word 16
-    push    word 12
-    push    word C_WHITE
-    call    FillRect
-
-    ; Center taller lobe
-    mov     cx, ax
-    add     cx, 10
-    push    cx
-    push    word 32
-    push    word 20
-    push    word 20
-    push    word C_WHITE
-    call    FillRect
-
-    ; Right lobe
-    mov     cx, ax
-    add     cx, 26
-    push    cx
-    push    word 40
-    push    word 16
-    push    word 12
-    push    word C_WHITE
-    call    FillRect
-
-    ; --- 2. Green Bush (at bx + 128, sitting on ground y = 160) ---
-.draw_bush:
-    mov     ax, bx
-    add     ax, 128
-    sub     ax, [cam_x]
-    cmp     ax, -48
-    jl      .next_anchor
-    cmp     ax, SCREEN_W
-    jge     .next_anchor
-
-    ; Left bush mound
-    push    ax
-    push    word 148
-    push    word 14
-    push    word 12
-    push    word C_GREEN_LIGHT
-    call    FillRect
-
-    ; Center taller bush mound
-    mov     cx, ax
-    add     cx, 10
-    push    cx
-    push    word 142
-    push    word 18
-    push    word 18
-    push    word C_GREEN_LIGHT
-    call    FillRect
-
-    ; Right bush mound
-    mov     cx, ax
-    add     cx, 24
-    push    cx
-    push    word 148
-    push    word 14
-    push    word 12
-    push    word C_GREEN_LIGHT
-    call    FillRect
-
-    ; Dark green base shadow strip along ground line (y = 158..160)
-    push    ax
-    push    word 158
-    push    word 38
-    push    word 2
-    push    word C_GREEN_DARK
-    call    FillRect
-
-.next_anchor:
-    add     bx, 256                     ; Repeat every 256 world pixels
-    jmp     .scenery_loop
-
-.done:
-    pop     dx
-    pop     cx
-    pop     bx
-    pop     ax
-    ret
-
 DrawBrickTile:
     push    bp
     mov     bp, sp
     push    ax
     push    bx
-    push    dx
 
-    mov     bx, [bp+6]
-    mov     dx, [bp+4]
+    mov     ax, [bp+6]          ; x
+    mov     bx, [bp+4]          ; y
 
-    push    bx
-    push    dx
-    push    word 16
-    push    word 16
-    push    word C_RED_DARK
-    call    FillRect
-
-    push    bx
-    push    dx
-    push    word 16
-    push    word 1
-    push    word C_BLACK
-    call    FillRect
-
-    mov     ax, dx
-    add     ax, 15
-    push    bx
+    ; Base brown brick fill (16x16)
     push    ax
-    push    word 16
-    push    word 1
-    push    word C_BLACK
-    call    FillRect
-
     push    bx
-    push    dx
-    push    word 1
     push    word 16
-    push    word C_BLACK
+    push    word 16
+    push    word C_BROWN
     call    FillRect
 
-    mov     ax, bx
-    add     ax, 15
+    ; Top highlight line
     push    ax
-    push    dx
-    push    word 1
+    push    bx
     push    word 16
+    push    word 1
+    push    word C_YELLOW
+    call    FillRect
+
+    ; Middle horizontal mortar line
+    mov     bx, [bp+4]
+    add     bx, 8
+    push    ax
+    push    bx
+    push    word 16
+    push    word 1
     push    word C_BLACK
     call    FillRect
 
-    mov     ax, dx
+    ; Bottom mortar line
+    mov     bx, [bp+4]
+    add     bx, 15
+    push    ax
+    push    bx
+    push    word 16
+    push    word 1
+    push    word C_BLACK
+    call    FillRect
+
+    ; Top-half vertical mortar line (x + 8, y + 1..7)
+    mov     ax, [bp+6]
     add     ax, 8
-    push    bx
+    mov     bx, [bp+4]
+    inc     bx
     push    ax
-    push    word 16
+    push    bx
     push    word 1
+    push    word 7
     push    word C_BLACK
     call    FillRect
 
-    mov     ax, bx
-    add     ax, 1
-    mov     dx, [bp+4]
-    add     dx, 1
+    ; Bottom-half vertical mortar lines (x + 0 and x + 15, y + 9..14)
+    mov     ax, [bp+6]
+    mov     bx, [bp+4]
+    add     bx, 9
     push    ax
-    push    dx
-    push    word 14
-    push    word 2
-    push    word C_RED_LIGHT
+    push    bx
+    push    word 1
+    push    word 6
+    push    word C_BLACK
     call    FillRect
 
-    pop     dx
     pop     bx
     pop     ax
     pop     bp
     ret     4
+; ============================================================================
+; DrawBackgroundScenery: Renders scrolling white clouds and green bushes
+; ============================================================================
+
+    
 
 ; ============================================================================
 ; DrawMarioSprite: [BP+8]=x, [BP+6]=y, [BP+4]=flags (bit0=frame, bit1=flip)
